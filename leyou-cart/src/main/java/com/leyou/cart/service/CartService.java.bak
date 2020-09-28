@@ -1,0 +1,56 @@
+package com.leyou.cart.service;
+
+import com.leyou.auth.pojo.UserInfo;
+import com.leyou.cart.client.GoodsClient;
+import com.leyou.cart.interceptor.LoginInterceptor;
+import com.leyou.cart.pojo.Cart;
+import com.leyou.common.utils.JsonUtils;
+import com.leyou.item.pojo.Sku;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.BoundHashOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CartService {
+
+    @Autowired private StringRedisTemplate stringRedisTemplate;
+    @Autowired private GoodsClient goodsClient;
+
+
+    public void addCart(Cart cart) {
+        UserInfo userInfo = LoginInterceptor.get();
+        BoundHashOperations<String, Object, Object> stringObjectObjectBoundHashOperations = stringRedisTemplate.boundHashOps(userInfo.getId().toString());
+        String skuId = cart.getSkuId().toString();
+        Integer num = cart.getNum();
+        if (stringObjectObjectBoundHashOperations.hasKey(skuId)){
+            String cartJson = stringObjectObjectBoundHashOperations.get(skuId).toString();
+            cart = JsonUtils.parse(cartJson, Cart.class);
+            cart.setNum(num+cart.getNum());
+        }else {
+            cart.setUserId(userInfo.getId());
+            Sku sku = this.goodsClient.querySkuById(cart.getSkuId());
+            cart.setPrice(sku.getPrice());
+            cart.setImage(StringUtils.isBlank(sku.getImages())?"":StringUtils.split(sku.getImages(),",")[0]);
+            cart.setOwnSpec(sku.getOwnSpec());
+            cart.setTitle(sku.getTitle());
+        }
+        stringObjectObjectBoundHashOperations.put(skuId, JsonUtils.serialize(cart));
+    }
+    public List<Cart> queryCarts() {
+
+        UserInfo userInfo = LoginInterceptor.get();
+
+
+        if (!this.redisTemplate.hasKey(userInfo.getId().toString())){
+            return null;
+        }
+
+        BoundHashOperations<String, Object, Object> hashOperations = redisTemplate.boundHashOps(userInfo.getId().toString());
+
+        List<Object> cartJsons = hashOperations.values();
+
+        return cartJsons.stream().map(cartJson -> JsonUtils.parse(cartJson.toString(), Cart.class)).collect(Collectors.toList());
+    }
+}

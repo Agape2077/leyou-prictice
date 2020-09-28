@@ -1,0 +1,17 @@
+# Project exclude paths
+/kibana-6.3.0-windows-x86_64/node_modules/
+/leyou-auth/leyou-auth-common/target/
+/leyou-auth/leyou-auth-service/target/
+/leyou-cart/target/
+/leyou-common/target/
+/leyou-gateway/target/
+/leyou-goods-web/target/
+/leyou-item/leyou-item-interface/target/
+/leyou-item/leyou-item-service/target/
+/leyou-order/target/
+/leyou-registry/target/
+/leyou-search/target/
+/leyou-SMS-NoCash-Disabled/target/
+/leyou-upload/target/
+/leyou-user/leyou-user-interface/target/
+/leyou-user/leyou-user-service/target/
